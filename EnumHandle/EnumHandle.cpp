@@ -1,4 +1,4 @@
-// EnumHandle.cpp : ƒRƒ“ƒ\[ƒ‹ ƒAƒvƒŠƒP[ƒVƒ‡ƒ“‚ÌƒGƒ“ƒgƒŠ ƒ|ƒCƒ“ƒg‚ğ’è‹`‚µ‚Ü‚·B
+// EnumHandle.cpp : ã‚³ãƒ³ã‚½ãƒ¼ãƒ« ã‚¢ãƒ—ãƒªã‚±ãƒ¼ã‚·ãƒ§ãƒ³ã®ã‚¨ãƒ³ãƒˆãƒª ãƒã‚¤ãƒ³ãƒˆã‚’å®šç¾©ã—ã¾ã™ã€‚
 //
 
 #include "stdafx.h"
@@ -156,7 +156,7 @@ _NtDuplicateObject ApiNtDuplicateObject;
 _NtQueryObject ApiNtQueryObject;
 
 
-//ƒvƒƒZƒX–¼‚ğo—Í‚·‚éB
+//ãƒ—ãƒ­ã‚»ã‚¹åã‚’å‡ºåŠ›ã™ã‚‹ã€‚
 void PrintProcessName(DWORD pid, std::vector<std::unique_ptr<wchar_t[]>>* output)
 {
 	DWORD cbNeeded;
@@ -183,7 +183,7 @@ void PrintHandle(DWORD pid, std::vector<std::unique_ptr<wchar_t[]>>* output)
 		return;
 	}
 
-	//ŠY“–ƒvƒƒZƒX‚Ìó‘Ô‚ğæ“¾
+	//è©²å½“ãƒ—ãƒ­ã‚»ã‚¹ã®çŠ¶æ…‹ã‚’å–å¾—
 	NTSTATUS status;
 	ULONG returnLength = 4096;
 	std::unique_ptr<char[]> pHandleBuf(new char[returnLength]);
@@ -212,7 +212,7 @@ void PrintHandle(DWORD pid, std::vector<std::unique_ptr<wchar_t[]>>* output)
 			continue;
 		}
 
-		//ƒnƒ“ƒhƒ‹‚ğ•¡»‚·‚é
+		//ãƒãƒ³ãƒ‰ãƒ«ã‚’è¤‡è£½ã™ã‚‹
 		HANDLE dupHandleTmp(NULL);
 		status = ApiNtDuplicateObject(hProcess, (HANDLE)syshandle->Handle, ::GetCurrentProcess(), &dupHandleTmp, 0, 0, 0);
 		if (!NT_SUCCESS(status)) {
@@ -224,7 +224,7 @@ void PrintHandle(DWORD pid, std::vector<std::unique_ptr<wchar_t[]>>* output)
 		CEnsureCloseHandle dupHandle(dupHandleTmp);
 
 
-		//ˆÈ‰º‚Ìƒnƒ“ƒhƒ‹‚Ìê‡‚Í–³‹‚µ‚È‚¢‚Æƒnƒ“ƒO‚µ‚½‚è‚·‚é‚Ì‚Å–³‹‚·‚éB
+		//ä»¥ä¸‹ã®ãƒãƒ³ãƒ‰ãƒ«ã®å ´åˆã¯ç„¡è¦–ã—ãªã„ã¨ãƒãƒ³ã‚°ã—ãŸã‚Šã™ã‚‹ã®ã§ç„¡è¦–ã™ã‚‹ã€‚
 		if ((syshandle->GrantedAccess == 0x0012019f)
 			|| (syshandle->GrantedAccess == 0x001a019f)
 			|| (syshandle->GrantedAccess == 0x00120189)
@@ -234,7 +234,7 @@ void PrintHandle(DWORD pid, std::vector<std::unique_ptr<wchar_t[]>>* output)
 			continue;
 		}
 
-		//ƒIƒuƒWƒFƒNƒgî•ñ‚Ìæ“¾
+		//ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆæƒ…å ±ã®å–å¾—
 		returnLength = 4096;
 		std::unique_ptr<char[]> pObjectTypeBuf(new char[returnLength]);
 		while((status = ::NtQueryObject(
@@ -253,8 +253,11 @@ void PrintHandle(DWORD pid, std::vector<std::unique_ptr<wchar_t[]>>* output)
 			//PrintNtStatusErrorMessage(message.get(), status, output);
 			continue;
 		}
+		
+		if (FILE_TYPE_PIPE == GetFileType(dupHandle))
+            		continue;//ç®¡é“çš„ä¼šæ­»é”ï¼Œå¿½ç•¥ä¹‹
 
-		//ƒIƒuƒWƒFƒNƒg–¼‚Ìæ“¾
+		//ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆåã®å–å¾—
 		returnLength = 4096;
 		std::unique_ptr<char[]> pObjectNameBuf(new char[returnLength]);
 		while ((status = ::NtQueryObject(
@@ -317,12 +320,12 @@ int wmain(int argc, wchar_t *argv[])
 	DWORD cbNeeded;
 	std::vector<DWORD> process(4096);
 
-	// DLL‚Ìƒƒ\ƒbƒh‚ğƒ[ƒh‚·‚é
+	// DLLã®ãƒ¡ã‚½ãƒƒãƒ‰ã‚’ãƒ­ãƒ¼ãƒ‰ã™ã‚‹
 	ApiNtQuerySystemInformation = (_NtQuerySystemInformation)GetLibraryProcAddress("ntdll.dll", "NtQuerySystemInformation");
 	ApiNtDuplicateObject = (_NtDuplicateObject)GetLibraryProcAddress("ntdll.dll", "NtDuplicateObject");
 	ApiNtQueryObject = (_NtQueryObject)GetLibraryProcAddress("ntdll.dll", "NtQueryObject");
 
-	//ƒvƒƒZƒXˆê——‚ğ—ñ‹“
+	//ãƒ—ãƒ­ã‚»ã‚¹ä¸€è¦§ã‚’åˆ—æŒ™
 	isProcessGetEnd = TRUE;
 	do {
 		::EnumProcesses(&process[0], process.size()*sizeof(DWORD), &cbNeeded);
@@ -335,7 +338,7 @@ int wmain(int argc, wchar_t *argv[])
 
 	std::vector<std::unique_ptr<wchar_t[]>> output;
 
-	//ƒnƒ“ƒhƒ‹ˆê——‚ğo—Í‚·‚é
+	//ãƒãƒ³ãƒ‰ãƒ«ä¸€è¦§ã‚’å‡ºåŠ›ã™ã‚‹
 	int processNum = cbNeeded / sizeof(DWORD);
 	for (int i = 0; i < processNum; i++) {
 		PrintProcessName(process[i], &output);
